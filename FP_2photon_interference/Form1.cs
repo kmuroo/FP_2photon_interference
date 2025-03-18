@@ -16,7 +16,6 @@ namespace FP_2photon_interference
 {
     public partial class Form1 : Form
     {
-        //private void add_serial_portnames();
         int n = 0; 
         int dt=1000;  //パラメーター初期値1000 ms毎
         int job_number = 0;
@@ -78,7 +77,7 @@ namespace FP_2photon_interference
                         // ポートがオープンするまで待つ
                     }
                     serialPort1.BaudRate = 115200; // ArduinoソースのSerial　ボーレートと合わせる
-                    serialPort1.ReadTimeout = 3000; // エコーバックを3秒まつ
+                    serialPort1.ReadTimeout = 5000; // エコーバックを5秒まつ
                     serialPort1.ReadExisting(); //バッファを空に
                     string a = "C";
                     string c = arduino_send_recv("c");
@@ -104,12 +103,6 @@ namespace FP_2photon_interference
                 label2.Text = serialPort1.PortName;
                 button1.BackColor = Color.DarkGray;
                 number_of_coms++;
-                //arduino_send_recv("c"); //念のためArduinoのTime割り込み停止指示
-
-                //パラメーター初期値設定
-                //arduino_send_recv("t" + dt.ToString());
-                //textBox2.AppendText("周期(ms)：");
-                //textBox2.AppendText(dt.ToString() + "\r\n\r\n");
 
                 if (ch1_enable || ch2_enable)
                 {
@@ -139,7 +132,7 @@ namespace FP_2photon_interference
                         // ポートがオープンするまで待つ
                     }
                     serialPort2.BaudRate = 115200; // ArduinoソースのSerial　ボーレートと合わせる
-                    serialPort2.ReadTimeout = 3000; // エコーバックを3秒まつ
+                    serialPort2.ReadTimeout = 5000; // エコーバックを秒まつ
                     serialPort2.ReadExisting(); //バッファを空に
 
                     string a = "C";
@@ -166,12 +159,6 @@ namespace FP_2photon_interference
                 label12.Text = serialPort2.PortName;
                 button7.BackColor = Color.DarkGray;
                 number_of_coms++;
-                //arduino_send_recv("c"); //念のためArduinoのTime割り込み停止指示
-
-                //パラメーター初期値設定
-                //arduino_send_recv("t" + dt.ToString());
-                //textBox2.AppendText("周期(ms)：");
-                //textBox2.AppendText(dt.ToString() + "\r\n\r\n");
 
                 if (ch1_enable || ch2_enable)
                 {
@@ -194,7 +181,6 @@ namespace FP_2photon_interference
 
         private void button2_Click(object sender, EventArgs e)//パラメーター設定
         {
-            //if(serialPort1.IsOpen == true)
             if(ch1_enable || ch2_enable)
             {
                 label6.Text = "STATUS: Not Ready";
@@ -220,8 +206,6 @@ namespace FP_2photon_interference
                    
                     //ダイアログでの設定値を現在の設定値にする
                     dt = int.Parse(Form2.Instance.Form2_Text1);
-                    //新設定値をArduinoに書き込み
-                    //arduino_send_recv("t" + dt.ToString());
                     textBox2.AppendText("周期(ms)：");
                     textBox2.AppendText(dt.ToString() + "\r\n\r\n");
 
@@ -252,8 +236,6 @@ namespace FP_2photon_interference
 
         private void add_serial_portname()
         {
-
-            //string[] ports = SerialPort.GetPortNames();
             ports = SerialPort.GetPortNames();
             foreach (string port in ports)
             {
@@ -325,7 +307,6 @@ namespace FP_2photon_interference
 
         private void button3_Click(object sender, EventArgs e)
         {
-            //if (serialPort1.IsOpen == true)
             if (ch1_enable || ch2_enable)
             {
                 Task<int> task = Task.Run(() => {
@@ -346,13 +327,15 @@ namespace FP_2photon_interference
             Array.Resize(ref ch2, 0);
             try
             {
-                button1.Enabled = false;    // Open COM ボタンを無効に
+                button1.Enabled = false;    // Open COM (CH1) ボタンを無効に
+                button7.Enabled = false;    // Open COM (CH2) ボタンを無効に
                 button2.Enabled = false;    // 設定 ボタンを無効に
                 button3.Enabled = false;    // Run ボタンを無効に
                 button4.Enabled = false;    // Save DATA ボタンを無効に
                 button5.Enabled = true;     // 中断 ボタンを有効に
+                button8.Enabled = false;     // CH1アクティベートボタンを有効に
+                button9.Enabled = false;     // CH2アクティベートボタンを有効に
 
-                //arduino_send_recv("r");// →obsolate
                 if (ch1_enable) { arduino_send_recv("t" + dt.ToString()); }
                 if (ch2_enable) { arduino_send_recv2("t" + dt.ToString()); }
                 button3.Text = "Sampling...";
@@ -366,7 +349,6 @@ namespace FP_2photon_interference
                 if (ch2_enable) { header += "\tCH2"; }
                 header += "\r\n";
                 textBox2.AppendText(header);
-                //textBox2.AppendText("Index\tCH1\tCH2\r\n");
 
                 for (i = 0; i < 2147483647; i++)
                     {
@@ -404,8 +386,6 @@ namespace FP_2photon_interference
                 for (i = 0; i < n; i++)
                 {
                     data = recieved_str[i];
-                    //ch1[i] = int.Parse(data.Substring(0, data.IndexOf("\t"))); //Perse()はヌル文字列のとき例外が発生
-                    //ch2[i] = int.Parse(data.Substring(data.IndexOf("\t") + 1));
                     int.TryParse(data.Substring(0, data.IndexOf("\t")), out ch1[i]); //TryPerse() はヌル文字列のときfalse(bool値)を返す 値は0が変数に書き込まれる
                     int.TryParse(data.Substring(data.IndexOf("\t") + 1), out ch2[i]);
                 }
@@ -418,11 +398,14 @@ namespace FP_2photon_interference
 
 
                 
-                button1.Enabled = true;    // Open COM ボタンを有効に
+                button1.Enabled = true;    // Open COM (CH1) ボタンを有効に
+                button7.Enabled = true;    // Open COM (CH2) ボタンを有効に
                 button2.Enabled = true;    // 設定 ボタンを有効に
                 button3.Enabled = true;    // Run ボタンを有効に
                 button4.Enabled = true;    // Save DATA ボタンを有効に
                 button5.Enabled = false;   // 中断ボタンを無効に
+                button8.Enabled = true;   // CH1アクティベートボタンを無効に
+                button9.Enabled = true;   // CH2アクティベートボタンを無効に
 
             }
             catch (Exception err)
@@ -459,16 +442,13 @@ namespace FP_2photon_interference
             sw.WriteLine("# Duration: " + dt.ToString() + " ms");
             if (ch1_enable) { header += ", CH1"; }
             if (ch2_enable) { header += ", CH2"; }
-            //sw.WriteLine("# Index, CH1, CH2");
             sw.WriteLine(header);
             for (i=0; i < n; i++)
             {
-                //data = recieved_str[i];
                 temp_str = i.ToString();
                 if (ch1_enable){ temp_str += ",\t" + ch1[i]; }
                 if (ch2_enable) { temp_str += ",\t" + ch2[i]; }
                 sw.WriteLine(temp_str);
-                //sw.WriteLine(i + ",\t" + ch1[i] + ",\t" + ch2[i]);
             }
            
             sw.Close();
@@ -538,13 +518,7 @@ namespace FP_2photon_interference
             serialPort1.ReadExisting(); //バッファを空に
 
             serialPort1.Write(send_message); //メッセージ送信
-            /*
-            while (serialPort1.BytesToRead == 0)
-            {
-                // バッファにデータが溜まるまでまつ（エコーバック用）
-            }
-            */
-            serialPort1.ReadTimeout = 3000;
+            serialPort1.ReadTimeout = 5000;
             recv_message = serialPort1.ReadLine();//メッセージ受信
 
             return recv_message;        
@@ -557,14 +531,8 @@ namespace FP_2photon_interference
             serialPort2.ReadExisting(); //バッファを空に
 
             serialPort2.Write(send_message); //メッセージ送信
-            /*
-            while (serialPort2.BytesToRead == 0)
-            {
-                // バッファにデータが溜まるまでまつ（エコーバック用）
-            }
-            */
             recv_message = serialPort2.ReadLine();//メッセージ受信
-            serialPort2.ReadTimeout = 3000;
+            serialPort2.ReadTimeout = 5000;
 
             return recv_message;
         }
