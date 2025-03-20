@@ -27,65 +27,92 @@ namespace FP_2photon_interference
         string default_portname2 = "COM6"; // CH2用デフォルトCOMポート
         string[] current_portname = new string[16];
         string[] current_portname2 = new string[16];
-        bool ch1_enable = false;
-        bool ch2_enable = false;
+        bool[] ch_enable = new bool[] { false, false, false };
         string[] ports;
         int number_of_coms = 0;
+        int number_of_ch = 0;
+        SerialPort[] serialPort = new SerialPort[3];
+        System.Windows.Forms.Button[] button_open = new System.Windows.Forms.Button[3];
+        System.Windows.Forms.Button[] button_active = new System.Windows.Forms.Button[3];
+        System.Windows.Forms.Label[] label_ch = new System.Windows.Forms.Label[3];
 
         public Form1()
         {
             InitializeComponent();
             add_serial_portname();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            serialPort[1] = serialPort1;
+            serialPort[2] = serialPort2;
+            button_open[1] = button1;
+            button_open[2] = button7;
+            button_active[1] = button8;
+            button_active[2] = button9;
+            label_ch[1] = label2;
+            label_ch[2] = label12;
+
+            textBox2.AppendText("測定間隔：");
+            textBox2.AppendText(dt.ToString() + " ms\r\n\r\n");
+            //textBox2.AppendText("接続されているカウンターを探索しています\r\n\r\n");
+
             if (ports.Length >= 2)
             {
-                comopen();
-                comopen2();
+                comopen_general(1);
+                comopen_general(2);
             }
             else
             {
                 if (ports.Length >= 1)
                 {
-                    comopen();
+                    comopen_general(1);
                 }
             }
-                textBox2.AppendText("\r\nカウンター数: " + number_of_coms);
-            textBox2.AppendText("\r\n周期(ms)：");
-            textBox2.AppendText(dt.ToString() + "\r\n\r\n");
+
+            textBox2.AppendText("\r\nカウンター数/ポート数: " + number_of_ch + "/" + number_of_coms + "\r\n\r\n");
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            comopen();
+            comopen_general(1);
         }
 
         private void button7_Click(object sender, EventArgs e)
         {
-            comopen2();
+            comopen_general(2);
         }
 
-        private void comopen()
+        private void comopen_general(int ch_id)
         {
-            if (serialPort1.IsOpen == false)
+            if (serialPort[ch_id].IsOpen == false)
             {
-                serialPort1.PortName = comboBox1.SelectedItem.ToString();// comboBox1.SelectedText;
-                
+                if (ch_id == 1)
+                {
+                    serialPort[ch_id].PortName = comboBox1.SelectedItem.ToString();// comboBox1.SelectedText;
+                }
+                else
+                {
+                    serialPort[ch_id].PortName = comboBox2.SelectedItem.ToString();
+                }
                 try
                 {
-                    serialPort1.Open();
-                    while (serialPort1.IsOpen == false)
+                    serialPort[ch_id].Open();
+                    while (serialPort[ch_id].IsOpen == false)
                     {
                         // ポートがオープンするまで待つ
                     }
-                    serialPort1.BaudRate = 115200; // ArduinoソースのSerial　ボーレートと合わせる
-                    serialPort1.ReadTimeout = 5000; // エコーバックを5秒まつ
-                    serialPort1.ReadExisting(); //バッファを空に
+                    serialPort[ch_id].BaudRate = 115200; // ArduinoソースのSerial　ボーレートと合わせる
+                    serialPort[ch_id].ReadTimeout = 5000; // エコーバックを5秒まつ
+                    serialPort[ch_id].ReadExisting(); //バッファを空に
                     string a = "C";
-                    string c = arduino_send_recv("c");
+                    string c = arduino_send_recv_general(ch_id,"c");
                     if (a[0] == c[0]) //接続成功すれば 'C' がArduinoから返ってくる
                     {
-                        textBox2.AppendText("COMポートCH1 (Arduino Uno)を接続しました\r\n");
-                        ch1_enable = true;
-                        button8.BackColor = Color.DarkGray;
+                        textBox2.AppendText("COMポートCH" + ch_id + " (Arduino Uno)を接続しました\r\n");
+                        ch_enable[ch_id] = true;
+                        number_of_ch++;
+                        button_active[ch_id].BackColor = Color.DarkGray;
                     }
                     else
                     {
@@ -95,72 +122,15 @@ namespace FP_2photon_interference
                 catch (Exception ex)
                 {
                     textBox2.AppendText(ex.Message);
-                    serialPort1.Close();
+                    serialPort[ch_id].Close();
                     return;
                 }
 
-                button1.Text = "Connected";
-                label2.Text = serialPort1.PortName;
-                button1.BackColor = Color.DarkGray;
-                number_of_coms++;
-
-                if (ch1_enable || ch2_enable)
-                {
-                    label4.Text = dt.ToString();
-                    label6.Text = "STATUS: Ready to RUN";
-                    label6.BackColor = Color.LightCyan;
-                }
-            }
-            else
-            {
-                comclose();
-            }
-        }
-
-
-        private void comopen2()
-        {
-            if (serialPort2.IsOpen == false)
-            {
-                serialPort2.PortName = comboBox2.SelectedItem.ToString();// comboBox1.SelectedText;
+                button_open[ch_id].Text = "Connected";
+                label_ch[ch_id].Text = serialPort[ch_id].PortName;
+                button_open[ch_id].BackColor = Color.DarkGray;
                 
-                try
-                {
-                    serialPort2.Open();
-                    while (serialPort2.IsOpen == false)
-                    {
-                        // ポートがオープンするまで待つ
-                    }
-                    serialPort2.BaudRate = 115200; // ArduinoソースのSerial　ボーレートと合わせる
-                    serialPort2.ReadTimeout = 5000; // エコーバックを秒まつ
-                    serialPort2.ReadExisting(); //バッファを空に
-
-                    string a = "C";
-                    string c = arduino_send_recv2("c");
-                    if (a[0] == c[0]) //接続成功すれば 'C' がArduinoから返ってくる
-                    {
-                        textBox2.AppendText("COMポートCH2 (Arduino Uno)を接続しました\r\n");
-                        ch2_enable = true;
-                        button9.BackColor = Color.DarkGray;
-                    }
-                    else
-                    {
-                        throw new Exception("COMポートからが反応がない、または誤った反応をしています。もう一度「Open COM」ボタンを押して、反応がおかしいようであれば他のCOMポートを試してください。\r\n\r\n");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    textBox2.AppendText(ex.Message);
-                    serialPort2.Close();
-                    return;
-                }
-
-                button7.Text = "Connected";
-                label12.Text = serialPort2.PortName;
-                button7.BackColor = Color.DarkGray;
-                number_of_coms++;
-
-                if (ch1_enable || ch2_enable)
+                if (ch_enable[1] || ch_enable[2])
                 {
                     label4.Text = dt.ToString();
                     label6.Text = "STATUS: Ready to RUN";
@@ -169,10 +139,9 @@ namespace FP_2photon_interference
             }
             else
             {
-                comclose2();
+                comclose_general(ch_id);
             }
         }
-
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -181,7 +150,7 @@ namespace FP_2photon_interference
 
         private void button2_Click(object sender, EventArgs e)//パラメーター設定
         {
-            if(ch1_enable || ch2_enable)
+            if(ch_enable[1] || ch_enable[2])
             {
                 label6.Text = "STATUS: Not Ready";
                 label6.BackColor = Color.Yellow;
@@ -209,7 +178,7 @@ namespace FP_2photon_interference
                     textBox2.AppendText("周期(ms)：");
                     textBox2.AppendText(dt.ToString() + "\r\n\r\n");
 
-                    if (ch1_enable || ch2_enable)
+                    if (ch_enable[1] || ch_enable[2])
                     {
                         label4.Text = dt.ToString();
                         label6.Text = "STATUS: Ready to RUN";
@@ -229,10 +198,6 @@ namespace FP_2photon_interference
             }
         }
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
-
-        }
 
         private void add_serial_portname()
         {
@@ -253,61 +218,37 @@ namespace FP_2photon_interference
             {
                 comboBox2.SelectedIndex = comboBox2.FindString(default_portname);
             }
+            number_of_coms = ports.Length;
         }
 
-        private void comclose()
+        private void comclose_general(int ch_id)
         {
-            if(serialPort1.IsOpen == true) 
+            if (serialPort[ch_id].IsOpen == true)
             {
-                arduino_send_recv("s");
+                arduino_send_recv_general(ch_id,"s");
 
-                serialPort1.Close();
-                textBox2.AppendText("COMポートCH1を切断しました\r\n\r\n");
-                if (ch1_enable)
+                serialPort[ch_id].Close();
+                textBox2.AppendText("COMポートCH" + ch_id + "を切断しました\r\n\r\n");
+                if (ch_enable[ch_id])
                 {
-                    ch1_enable = false;
-                    button8.BackColor = SystemColors.Control;
+                    ch_enable[ch_id] = false;
+                    button_active[ch_id].BackColor = SystemColors.Control;
                 }
-                button1.Text = "Open COM";
-                button1.BackColor = SystemColors.Control;
-                if (!(ch1_enable || ch2_enable))
+                button_open[ch_id].Text = "Open COM";
+                button_open[ch_id].BackColor = SystemColors.Control;
+                if (!(ch_enable[1] || ch_enable[2]))
                 {
                     label6.Text = "STATUS: Not Ready";
                     label6.BackColor = Color.Yellow;
                 }
-                number_of_coms--;
+                number_of_ch--;
             }
 
         }
-
-        private void comclose2()
-        {
-            if (serialPort2.IsOpen == true)
-            {
-                arduino_send_recv2("s");
-
-                serialPort2.Close();
-                textBox2.AppendText("COMポートCH2を切断しました\r\n\r\n");
-                if (ch2_enable)
-                {
-                    ch2_enable = false;
-                    button9.BackColor = SystemColors.Control;
-                }
-                button7.Text = "Open COM";
-                button7.BackColor = SystemColors.Control;
-                if (!(ch1_enable || ch2_enable))
-                {
-                    label6.Text = "STATUS: Not Ready";
-                    label6.BackColor = Color.Yellow;
-                }
-                number_of_coms--;
-            }
-
-        }
-
+ 
         private void button3_Click(object sender, EventArgs e)
         {
-            if (ch1_enable || ch2_enable)
+            if (ch_enable[1] || ch_enable[2])
             {
                 Task<int> task = Task.Run(() => {
                     return arduino_run();
@@ -327,17 +268,17 @@ namespace FP_2photon_interference
             Array.Resize(ref ch2, 0);
             try
             {
-                button1.Enabled = false;    // Open COM (CH1) ボタンを無効に
-                button7.Enabled = false;    // Open COM (CH2) ボタンを無効に
+                button_open[1].Enabled = false;    // Open COM (CH1) ボタンを無効に
+                button_open[2].Enabled = false;    // Open COM (CH2) ボタンを無効に
                 button2.Enabled = false;    // 設定 ボタンを無効に
                 button3.Enabled = false;    // Run ボタンを無効に
                 button4.Enabled = false;    // Save DATA ボタンを無効に
                 button5.Enabled = true;     // 中断 ボタンを有効に
-                button8.Enabled = false;     // CH1アクティベートボタンを有効に
-                button9.Enabled = false;     // CH2アクティベートボタンを有効に
+                button_active[1].Enabled = false;     // CH1アクティベートボタンを有効に
+                button_active[2].Enabled = false;     // CH2アクティベートボタンを有効に
 
-                if (ch1_enable) { arduino_send_recv("t" + dt.ToString()); }
-                if (ch2_enable) { arduino_send_recv2("t" + dt.ToString()); }
+                if (ch_enable[1]) { arduino_send_recv_general(1,"t" + dt.ToString()); }
+                if (ch_enable[2]) { arduino_send_recv_general(2,"t" + dt.ToString()); }
                 button3.Text = "Sampling...";
                 button3.BackColor = Color.LightCyan;
                 string data;
@@ -345,8 +286,8 @@ namespace FP_2photon_interference
 
                 textBox2.AppendText("サンプリング開始 Job " + job_number + "\r\n");
                 string header = "Index";
-                if (ch1_enable) { header += "\tCH1"; }
-                if (ch2_enable) { header += "\tCH2"; }
+                if (ch_enable[1]) { header += "\tCH1"; }
+                if (ch_enable[2]) { header += "\tCH2"; }
                 header += "\r\n";
                 textBox2.AppendText(header);
 
@@ -357,11 +298,11 @@ namespace FP_2photon_interference
                         break;
                     }
                     Array.Resize(ref recieved_str, i + 1);
-                    if (ch1_enable)
+                    if (ch_enable[1])
                     {
                         recieved_str[i] = serialPort1.ReadLine();
                     }
-                    if (ch2_enable)
+                    if (ch_enable[2])
                     {
                         recieved_str[i] += serialPort2.ReadLine();
                     }
@@ -371,11 +312,11 @@ namespace FP_2photon_interference
 
                 if(cancel == true)
                 {
-                    { arduino_send_recv("s"); }
-                    if (ch2_enable) { arduino_send_recv2("s"); }
+                    if (ch_enable[1]) { arduino_send_recv_general(1,"s"); }
+                    if (ch_enable[2]) { arduino_send_recv_general(2,"s"); }
                     cancel = false;
-                    if (ch1_enable) { serialPort1.ReadExisting(); } //バッファを空に
-                    if (ch2_enable) { serialPort2.ReadExisting(); }
+                    if (ch_enable[1]) { serialPort[1].ReadExisting(); } //バッファを空に
+                    if (ch_enable[2]) { serialPort[2].ReadExisting(); }
                     textBox2.AppendText("サンプリング終了 ");
                     textBox2.AppendText("(サンプル数 = " + n + ")\r\n\r\n");
                 }
@@ -398,14 +339,14 @@ namespace FP_2photon_interference
 
 
                 
-                button1.Enabled = true;    // Open COM (CH1) ボタンを有効に
-                button7.Enabled = true;    // Open COM (CH2) ボタンを有効に
+                button_open[1].Enabled = true;    // Open COM (CH1) ボタンを有効に
+                button_open[2].Enabled = true;    // Open COM (CH2) ボタンを有効に
                 button2.Enabled = true;    // 設定 ボタンを有効に
                 button3.Enabled = true;    // Run ボタンを有効に
                 button4.Enabled = true;    // Save DATA ボタンを有効に
                 button5.Enabled = false;   // 中断ボタンを無効に
-                button8.Enabled = true;   // CH1アクティベートボタンを無効に
-                button9.Enabled = true;   // CH2アクティベートボタンを無効に
+                button_active[1].Enabled = true;   // CH1アクティベートボタンを無効に
+                button_active[2].Enabled = true;   // CH2アクティベートボタンを無効に
 
             }
             catch (Exception err)
@@ -423,8 +364,6 @@ namespace FP_2photon_interference
         private void button4_Click(object sender, EventArgs e)
         {
             int i;
-            //int t;
-            string data;
             string header = "# Index";
             string temp_str;
 
@@ -440,14 +379,14 @@ namespace FP_2photon_interference
             DateTime date = DateTime.Now;
             sw.WriteLine("# " + date.ToString("yyyy/MM/dd") + " Job " + job_number.ToString());
             sw.WriteLine("# Duration: " + dt.ToString() + " ms");
-            if (ch1_enable) { header += ", CH1"; }
-            if (ch2_enable) { header += ", CH2"; }
+            if (ch_enable[1]) { header += ", CH1"; }
+            if (ch_enable[2]) { header += ", CH2"; }
             sw.WriteLine(header);
             for (i=0; i < n; i++)
             {
                 temp_str = i.ToString();
-                if (ch1_enable){ temp_str += ",\t" + ch1[i]; }
-                if (ch2_enable) { temp_str += ",\t" + ch2[i]; }
+                if (ch_enable[1]){ temp_str += ",\t" + ch1[i]; }
+                if (ch_enable[2]) { temp_str += ",\t" + ch2[i]; }
                 sw.WriteLine(temp_str);
             }
            
@@ -465,7 +404,15 @@ namespace FP_2photon_interference
             }
             else
             {
-                comclose(); //COMポートを閉じて終了
+                //COMポートを閉じて終了
+                if (serialPort[1].IsOpen)
+                {
+                    comclose_general(1);
+                }
+                if (serialPort[2].IsOpen)
+                {
+                    comclose_general(2);
+                }
             }
         }
  
@@ -511,28 +458,15 @@ namespace FP_2photon_interference
 
         }
 
-        private string arduino_send_recv(string send_message)//Arduinoにメッセージ送信、コールバックあり
+        private string arduino_send_recv_general(int ch_id, string send_message)//Arduinoにメッセージ送信、コールバックあり
         {
             string recv_message;
 
-            serialPort1.ReadExisting(); //バッファを空に
+            serialPort[ch_id].ReadExisting(); //バッファを空に
 
-            serialPort1.Write(send_message); //メッセージ送信
-            serialPort1.ReadTimeout = 5000;
-            recv_message = serialPort1.ReadLine();//メッセージ受信
-
-            return recv_message;        
-        }
-
-        private string arduino_send_recv2(string send_message)//Arduinoにメッセージ送信、コールバックあり
-        {
-            string recv_message;
-
-            serialPort2.ReadExisting(); //バッファを空に
-
-            serialPort2.Write(send_message); //メッセージ送信
-            recv_message = serialPort2.ReadLine();//メッセージ受信
-            serialPort2.ReadTimeout = 5000;
+            serialPort[ch_id].Write(send_message); //メッセージ送信
+            serialPort[ch_id].ReadTimeout = 5000;
+            recv_message = serialPort[ch_id].ReadLine();//メッセージ受信
 
             return recv_message;
         }
@@ -569,11 +503,11 @@ namespace FP_2photon_interference
 
         private void button8_Click(object sender, EventArgs e)
         {
-            if (ch1_enable)
+            if (ch_enable[1])
             {
-                ch1_enable = false;
+                ch_enable[1] = false;
                 button8.BackColor = SystemColors.Control;
-                if (!ch2_enable)
+                if (!ch_enable[2])
                 {
                     label6.Text = "STATUS: Not Ready";
                     label6.BackColor = Color.Yellow;
@@ -581,9 +515,9 @@ namespace FP_2photon_interference
             }
             else
             {
-                if (serialPort1.IsOpen)
+                if (serialPort[1].IsOpen)
                 {
-                    ch1_enable = true;
+                    ch_enable[1] = true;
                     button8.BackColor = Color.DarkGray;
                     label6.Text = "STATUS: Ready to RUN";
                     label6.BackColor = Color.LightCyan;
@@ -594,11 +528,11 @@ namespace FP_2photon_interference
 
         private void button9_Click(object sender, EventArgs e)
         {
-            if (ch2_enable)
+            if (ch_enable[2])
             {
-                ch2_enable = false;
+                ch_enable[2] = false;
                 button9.BackColor = SystemColors.Control;
-                if (!ch1_enable)
+                if (!ch_enable[2])
                 {
                     label6.Text = "STATUS: Not Ready";
                     label6.BackColor = Color.Yellow;
@@ -606,9 +540,9 @@ namespace FP_2photon_interference
             }
             else
             {
-                if (serialPort2.IsOpen)
+                if (serialPort[2].IsOpen)
                 {
-                    ch2_enable = true;
+                    ch_enable[2] = true;
                     button9.BackColor = Color.DarkGray;
                     label6.Text = "STATUS: Ready to RUN";
                     label6.BackColor = Color.LightCyan;
