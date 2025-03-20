@@ -59,14 +59,14 @@ namespace FP_2photon_interference
 
             if (ports.Length >= 2)
             {
-                comopen_general(1);
-                comopen_general(2);
+                comopen(1);
+                comopen(2);
             }
             else
             {
                 if (ports.Length >= 1)
                 {
-                    comopen_general(1);
+                    comopen(1);
                 }
             }
 
@@ -75,15 +75,15 @@ namespace FP_2photon_interference
 
         private void button1_Click(object sender, EventArgs e)
         {
-            comopen_general(1);
+            comopen(1);
         }
 
         private void button7_Click(object sender, EventArgs e)
         {
-            comopen_general(2);
+            comopen(2);
         }
 
-        private void comopen_general(int ch_id)
+        private void comopen(int ch_id)
         {
             if (serialPort[ch_id].IsOpen == false)
             {
@@ -106,7 +106,7 @@ namespace FP_2photon_interference
                     serialPort[ch_id].ReadTimeout = 5000; // エコーバックを5秒まつ
                     serialPort[ch_id].ReadExisting(); //バッファを空に
                     string a = "C";
-                    string c = arduino_send_recv_general(ch_id,"c");
+                    string c = arduino_send_recv(ch_id,"c");
                     if (a[0] == c[0]) //接続成功すれば 'C' がArduinoから返ってくる
                     {
                         textBox2.AppendText("COMポートCH" + ch_id + " (Arduino Uno)を接続しました\r\n");
@@ -139,7 +139,7 @@ namespace FP_2photon_interference
             }
             else
             {
-                comclose_general(ch_id);
+                comclose(ch_id);
             }
         }
 
@@ -221,11 +221,11 @@ namespace FP_2photon_interference
             number_of_coms = ports.Length;
         }
 
-        private void comclose_general(int ch_id)
+        private void comclose(int ch_id)
         {
             if (serialPort[ch_id].IsOpen == true)
             {
-                arduino_send_recv_general(ch_id,"s");
+                arduino_send_recv(ch_id,"s");
 
                 serialPort[ch_id].Close();
                 textBox2.AppendText("COMポートCH" + ch_id + "を切断しました\r\n\r\n");
@@ -277,8 +277,8 @@ namespace FP_2photon_interference
                 button_active[1].Enabled = false;     // CH1アクティベートボタンを有効に
                 button_active[2].Enabled = false;     // CH2アクティベートボタンを有効に
 
-                if (ch_enable[1]) { arduino_send_recv_general(1,"t" + dt.ToString()); }
-                if (ch_enable[2]) { arduino_send_recv_general(2,"t" + dt.ToString()); }
+                if (ch_enable[1]) { arduino_send_recv(1,"t" + dt.ToString()); }
+                if (ch_enable[2]) { arduino_send_recv(2,"t" + dt.ToString()); }
                 button3.Text = "Sampling...";
                 button3.BackColor = Color.LightCyan;
                 string data;
@@ -312,8 +312,8 @@ namespace FP_2photon_interference
 
                 if(cancel == true)
                 {
-                    if (ch_enable[1]) { arduino_send_recv_general(1,"s"); }
-                    if (ch_enable[2]) { arduino_send_recv_general(2,"s"); }
+                    if (ch_enable[1]) { arduino_send_recv(1,"s"); }
+                    if (ch_enable[2]) { arduino_send_recv(2,"s"); }
                     cancel = false;
                     if (ch_enable[1]) { serialPort[1].ReadExisting(); } //バッファを空に
                     if (ch_enable[2]) { serialPort[2].ReadExisting(); }
@@ -407,11 +407,11 @@ namespace FP_2photon_interference
                 //COMポートを閉じて終了
                 if (serialPort[1].IsOpen)
                 {
-                    comclose_general(1);
+                    comclose(1);
                 }
                 if (serialPort[2].IsOpen)
                 {
-                    comclose_general(2);
+                    comclose(2);
                 }
             }
         }
@@ -458,7 +458,7 @@ namespace FP_2photon_interference
 
         }
 
-        private string arduino_send_recv_general(int ch_id, string send_message)//Arduinoにメッセージ送信、コールバックあり
+        private string arduino_send_recv(int ch_id, string send_message)//Arduinoにメッセージ送信、コールバックあり
         {
             string recv_message;
 

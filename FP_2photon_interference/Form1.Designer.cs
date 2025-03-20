@@ -339,8 +339,7 @@
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.ClientSize = new System.Drawing.Size(593, 438);
             this.Controls.Add(this.button9);
             this.Controls.Add(this.button8);
@@ -368,6 +367,8 @@
             this.Controls.Add(this.button2);
             this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.button1);
+            this.MaximumSize = new System.Drawing.Size(609, 477);
+            this.MinimumSize = new System.Drawing.Size(609, 477);
             this.Name = "Form1";
             this.Text = "2 Channel Pulse Counter";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);

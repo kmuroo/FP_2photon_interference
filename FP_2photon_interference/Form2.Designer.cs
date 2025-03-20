@@ -95,8 +95,10 @@
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.label1);
+            this.MaximumSize = new System.Drawing.Size(217, 131);
+            this.MinimumSize = new System.Drawing.Size(217, 131);
             this.Name = "Form2";
-            this.Text = "パラメーター設定";
+            this.Text = "設定";
             this.Load += new System.EventHandler(this.Form2_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
