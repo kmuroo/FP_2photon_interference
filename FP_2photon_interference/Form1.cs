@@ -321,8 +321,8 @@ namespace FP_2photon_interference
                     textBox2.AppendText("(サンプル数 = " + n + ")\r\n\r\n");
                 }
 
-                Array.Resize(ref ch1, 100);
-                Array.Resize(ref ch2, 100);
+                Array.Resize(ref ch1, n);
+                Array.Resize(ref ch2, n);
                 
                 for (i = 0; i < n; i++)
                 {
