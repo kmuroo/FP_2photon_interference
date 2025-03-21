@@ -7,7 +7,7 @@
     <ProjectGuid>{2554AB35-4BAF-4A14-9F2E-6D58B62216F6}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>FP_2photon_interference</RootNamespace>
-    <AssemblyName>FP_2photon_interference</AssemblyName>
+    <AssemblyName>2ch-counter</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
