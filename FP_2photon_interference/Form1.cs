@@ -385,8 +385,8 @@ namespace FP_2photon_interference
             for (i=0; i < n; i++)
             {
                 temp_str = i.ToString();
-                if (ch_enable[1]){ temp_str += ",\t" + ch1[i]; }
-                if (ch_enable[2]) { temp_str += ",\t" + ch2[i]; }
+                if (ch_enable[1]){ temp_str += ",    " + ch1[i]; }
+                if (ch_enable[2]) { temp_str += ",    " + ch2[i]; }
                 sw.WriteLine(temp_str);
             }
            

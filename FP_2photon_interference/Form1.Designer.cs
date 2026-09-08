@@ -191,7 +191,7 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(168, 12);
             this.textBox1.TabIndex = 13;
-            this.textBox1.Text = "Photon counter Interface Ver. 2.1";
+            this.textBox1.Text = "Photon counter Interface Ver. 2.2";
             this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
             // 
             // contextMenuStrip1
